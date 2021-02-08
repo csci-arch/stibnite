@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 import os
-import sys
 from time import sleep
 from subprocess import call, Popen
 import webbrowser
-from automacdoc import write_doc
+from stibium import write_doc
 
-def main(argv=None):
-    argv = sys.argv if argv is None else argv
+if __name__ == "__main__":
+    source_path = r"C:\My Files\stibium_input\FortuneTellerServer\src"
+    output_path = r"C:\My Files\stibium_output\output"
 
-    print(argv)
-
-    write_doc(argv[1], argv[2])
+    write_doc(source_path, output_path)
 
     sleep(1)
 
-    os.chdir(argv[2])
+    os.chdir(output_path)
 
     call(["mkdocs", "build", "--clean"])
     Popen(["mkdocs", "serve"])
@@ -23,6 +21,3 @@ def main(argv=None):
     sleep(2)
 
     webbrowser.open("http://127.0.0.1:8000/")
-
-if __name__ == "__main__":
-    main(sys.argv)

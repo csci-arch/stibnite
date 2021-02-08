@@ -1,0 +1,2 @@
+WINDOWS = "\\"
+LINUX = "/"
