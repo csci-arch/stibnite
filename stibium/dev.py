@@ -1,15 +1,17 @@
-#!/usr/bin/env python
 import os
 from time import sleep
 from subprocess import call, Popen
 import webbrowser
-from stibium import write_doc
+import platform
+import documentation_manager
+import automacdoc
 
 if __name__ == "__main__":
-    source_path = r"C:\My Files\stibium_input\FortuneTellerServer\src"
-    output_path = r"C:\My Files\stibium_output\output"
+    source_path = r"/home/xanghi/Desktop/github-repos/stibium/example"
+    output_path = r"/home/xanghi/Desktop/github-repos/output"
 
-    write_doc(source_path, output_path)
+    documentation_manager.DocumentationManager(source_path, output_path, platform.system())
+    # automacdoc.write_doc(source_path, output_path)
 
     sleep(1)
 

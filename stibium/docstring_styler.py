@@ -1,5 +1,5 @@
 from utils import wrappers
-from stibium import constants
+import constants
 
 class DocstringParser:
     def __init__(self,standard):

@@ -12,8 +12,8 @@ class ClassType:
             self.args = inspect.signature(obj)
         except:
             self.args = ""
-        self.functions = [FunctionType(o) for o in inspect.getmembers(obj, inspect.isfunction)]
-        self.methods = [FunctionType(o) for o in inspect.getmembers(obj, inspect.ismethod)]
+        self.functions = [FunctionType(obj) for name, obj in inspect.getmembers(obj, inspect.isfunction)]
+        self.methods = [FunctionType(obj) for name, obj in inspect.getmembers(obj, inspect.ismethod)]
 
 
 class FunctionType:

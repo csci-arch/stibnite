@@ -1,4 +1,4 @@
-from stibium import file_operations, docstring_styler, constants
+import file_operations, docstring_styler, constants
 import os
 
 
