@@ -7,10 +7,10 @@ import documentation_manager
 import automacdoc
 
 if __name__ == "__main__":
-    source_path = r"/home/xanghi/Desktop/github-repos/stibium/example"
-    output_path = r"/home/xanghi/Desktop/github-repos/output"
+    source_path = r""
+    output_path = r""
 
-    documentation_manager.DocumentationManager(source_path, output_path, platform.system())
+    documentation_manager.DocumentationManager(source_path, output_path, platform.system()).write_file_structure()
     # automacdoc.write_doc(source_path, output_path)
 
     sleep(1)
