@@ -1,20 +1,11 @@
-from functools import wraps
 
-class wrappers:
-    @staticmethod
-    def traverse_file_structure(file_structure):
-        def decorator(function):
-            @wraps(function)
-            def traverse(current):
-                if len(current.folders)>0:
-                    for folder in current.folders.keys():
-                        traverse(current.get_element(folder))
-                if len(current.files)>0:
-                    for file in current.files.keys():
-                        current[file] = function(current[file])
+def traverse_file_structure(current, function, **inner_function_args):
+    if len(current.folders)>0:
+        for folder in current.folders.keys():
+            traverse_file_structure(current.get_element(folder), function, **inner_function_args)
+    if len(current.files)>0:
+        for file in current.files.keys():
+            current.files[file] = function(current.files[file], **inner_function_args)
 
-                return current
+    return current
 
-            return traverse
-
-        return decorator

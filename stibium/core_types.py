@@ -6,10 +6,13 @@ class ClassType:
         self.module = obj.__module__
         self.path = inspect.getmodule(obj).__file__
         self.doc = obj.__doc__ or ""
-        self.source = inspect.getsource(obj) if obj.__doc__ is None \
-            else inspect.getsource(obj).replace(obj.__doc__, '').replace('"""', '')
         try:
-            self.args = inspect.signature(obj)
+            self.source = inspect.getsource(obj) if obj.__doc__ is None \
+                else inspect.getsource(obj).replace(obj.__doc__, '').replace('"""', '')
+        except:
+            self.source = ""
+        try:
+            self.args = str(inspect.signature(obj))
         except:
             self.args = ""
         self.functions = [FunctionType(obj) for name, obj in inspect.getmembers(obj, inspect.isfunction)]
@@ -27,4 +30,4 @@ class FunctionType:
         self.doc = obj.__doc__ or ""
         self.source = inspect.getsource(obj) if obj.__doc__ is None \
             else inspect.getsource(obj).replace(obj.__doc__, '').replace('"""', '')
-        self.args = inspect.signature(obj)
+        self.args = str(inspect.signature(obj))
