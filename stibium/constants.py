@@ -13,4 +13,3 @@ FORMAT = "format"
 CONTENT = "content"
 MARKDOWN = "md"
 RESTRUCTERED = "rest"
-

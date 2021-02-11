@@ -1,9 +1,9 @@
-import os
-import sys
-from time import sleep
-from subprocess import call, Popen
+from stibium import DocumentationManager
+from subprocess import call
 import webbrowser
-from stibium import write_doc
+import platform
+import sys
+import os
 
 
 def main(argv=None):
@@ -11,16 +11,13 @@ def main(argv=None):
 
     print(argv)
 
-    write_doc(argv[1], argv[2])
-
-    sleep(1)
+    DocumentationManager(argv[1], argv[2], platform.system()).write_file_structure()
 
     os.chdir(argv[2])
 
     call(["mkdocs", "build", "--clean"])
-    Popen(["mkdocs", "serve"])
 
-    sleep(2)
+    call(["mkdocs", "serve"])
 
     webbrowser.open("http://127.0.0.1:8000/")
 

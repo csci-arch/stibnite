@@ -1,25 +1,19 @@
-import os
-from time import sleep
-from subprocess import call, Popen
+from stibium import DocumentationManager
+from subprocess import call
 import webbrowser
 import platform
-import documentation_manager
-import automacdoc
+import os
 
 if __name__ == "__main__":
     source_path = r""
     output_path = r""
 
-    documentation_manager.DocumentationManager(source_path, output_path, platform.system()).write_file_structure()
-    # automacdoc.write_doc(source_path, output_path)
-
-    sleep(1)
+    DocumentationManager(source_path, output_path, platform.system()).write_file_structure()
 
     os.chdir(output_path)
 
     call(["mkdocs", "build", "--clean"])
-    Popen(["mkdocs", "serve"])
 
-    sleep(2)
+    call(["mkdocs", "serve"])
 
     webbrowser.open("http://127.0.0.1:8000/")

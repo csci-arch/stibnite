@@ -1,6 +1,6 @@
-import utils
-import constants
+from stibium import utils, constants
 import copy
+
 
 class DocstringParser:
     def __init__(self,standard):

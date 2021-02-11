@@ -1,1 +1,1 @@
-from .automacdoc import write_doc
+from .documentation_manager import DocumentationManager
