@@ -146,6 +146,7 @@ class DocstringStyler:
                 if len(rows[i])>nb_indent:
                     rows[i] = rows[i][nb_indent:]
             doc = '\n'.join(rows)
+            doc = f"{doc}\n\n"
 
         else:
             explanation, params = DocstringParser(standard).parse_docstring(docstring)
