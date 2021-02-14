@@ -1,7 +1,7 @@
-# stibium
-Automated python documentation generator
+# stibnite
+## Automated python documentation generator
 
 
 ### Disclaimer
 
-This projects is based on [automacdoc](https://github.com/AlexandreKempf/automacdoc) and cloned it at its [13.commit](https://github.com/AlexandreKempf/automacdoc/commit/c8df272d6eedeffd57e95a86ce07378ea559a89a)
+As the developers of this project we take it as one's duty to thank [AlexandreKempf](https://github.com/AlexandreKempf) and [other contributers](https://github.com/AlexandreKempf/automacdoc/graphs/contributors) in the [automacdoc](https://github.com/AlexandreKempf/automacdoc) project as they are the visionary fathers/mothers of stibnite.
