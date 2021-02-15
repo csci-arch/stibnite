@@ -132,7 +132,7 @@ dmypy.json
 .idea/
 
 # custom
-stibium/dev.py
+stibnite/dev.py
 
 example/
 

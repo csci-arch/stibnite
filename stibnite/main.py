@@ -1,4 +1,4 @@
-from stibnite import DocumentationManager
+from stibnite import DocumentationManager, constants
 from subprocess import call
 import webbrowser
 import platform
@@ -11,7 +11,9 @@ def main(argv=None):
 
     print(argv)
 
-    DocumentationManager(argv[1], argv[2], platform.system()).write_file_structure()
+    DocumentationManager(argv[1], argv[2], platform.system(),
+                         input_style=constants.RESTRUCTERED,
+                         output_style=constants.MARKDOWN).write_file_structure()
 
     os.chdir(argv[2])
 

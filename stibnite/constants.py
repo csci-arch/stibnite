@@ -1,8 +1,11 @@
 WINDOWS = "Windows"
 LINUX = "Linux"
 
-separator_dict = {WINDOWS: "\\",
+SEPARATOR_DICT = {WINDOWS: "\\",
                   LINUX: "/"}
+
+IGNORE_JSON_TEMPLATE = {"prefixes": [".", "__"],
+                        "names": ["example"]}
 
 NAME = "name"
 EXPLANATION = "explanation"

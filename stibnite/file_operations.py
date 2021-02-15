@@ -1,6 +1,8 @@
 from stibnite import constants, core_types
 import importlib.util as module_loader
+from functools import lru_cache
 import inspect
+import json
 import sys
 import os
 
@@ -82,75 +84,120 @@ def import_module(module_name, module_path):
     return module
 
 
+@lru_cache(maxsize=1)
+def get_json_file(documentation_path):
+    """Reads json file and returns it. This method works only ones and returns from cache for the other calls
+
+    :param documentation_path: path of the documentation
+    :type documentation_path: string
+    :return: json file content
+    :rtype: string
+    """
+    with open(f"{documentation_path}ignored_prefixes_and_names.json", "r", encoding="utf-8") as json_file:
+        return json_file.read()
+
+
+def is_ignored(name, documentation_path):
+    """Checks if the given name has a ignored prefix or name.
+
+    :param name: file or folder name
+    :type name: string
+    :param documentation_path: path of the documentation
+    :type documentation_path: string
+    :return: has a ignored prefix, name or not
+    :rtype: bool
+    """
+    ignored_dict = json.loads(get_json_file(documentation_path))
+    for prefix in ignored_dict["prefixes"]:
+        if name[:len(prefix)] == prefix:
+            return True
+    if name in ignored_dict['names']:
+        return True
+    return False
+
+
 class FileOperations:
-    @staticmethod
-    def read_file_structure(package_path, os_name):
+    """Main class for File Operations
+
+    :param package_path: path of the source package
+    :type package_path: string
+    :param documentation_path: path of the documentation will be create
+    :type documentation_path: string
+    :param documentation_name: name of the documentation will be create
+    :type documentation_name: string
+    :param os_name: name of the os that user is using
+    :type os_name: string
+    """
+    def __init__(self, package_path, documentation_path, documentation_name, os_name):
+        self.package_path = package_path
+        self.documentation_path = documentation_path
+        self.documentation_name = documentation_name
+        self.os_name = os_name
+        self.separator = constants.SEPARATOR_DICT[self.os_name]
+
+    def read_file_structure(self):
         """Reads the whole package and its subpackages and returns a file structure.
 
-        :param package_path: Path of the source package
-        :type package_path: string
-        :param os_name: Name of the os that user is using
-        :type os_name: string
-        :return: A file structure of the source package
+        :return: a file structure of the source package
         :rtype: stibnite.file_operations.FolderType
         """
-        sys.path.insert(0,  package_path)
-        separator = constants.separator_dict[os_name]
-        return build_file_tree(package_path, separator)
+        sys.path.insert(0,  self.package_path)
+        self.__create_template_ignore_file()
+        return build_file_tree(self.package_path, self.documentation_path, self.separator)
 
-    @staticmethod
-    def write_file_structure(file_structure, output_path, project_name, os_name):
+    def write_file_structure(self, file_structure):
         """Writes the documentation of the whole file structure and some other necessary files to run mkdocs such as index page and yaml file.
 
-        :param file_structure: The root of the file structure that is going to be written
+        :param file_structure: the root of the file structure that is going to be written
         :type file_structure: stibnite.file_operations.FolderType
-        :param output_path: The path of the folder that is going to contain outputs
-        :type output_path: string
-        :param project_name: Name of the project
-        :type project_name: string
-        :param os_name: Name of the os that user is using
-        :type os_name: string
         """
-        separator = constants.separator_dict[os_name]
-        current_path = f"{output_path}{separator}{file_structure.name}"
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
+        self.documentation_path = os.path.join(os.path.abspath(self.documentation_path), "docs")
+        if not os.path.exists(self.documentation_path):
+            os.mkdir(self.documentation_path)
+
+        current_path = f"{self.documentation_path}{self.separator}{file_structure.name}"
+        if not os.path.exists(current_path):
             os.mkdir(current_path)
-        toc = write_file_tree(file_structure, current_path, output_path, separator, "", 1)
 
-        yml_path = os.path.join(separator.join(output_path.split(separator)[:-1]), 'mkdocs.yml')
+        toc = write_file_tree(file_structure, current_path, self.documentation_path, self.separator, "", 1)
+
+        yml_path = os.path.join(self.separator.join(self.documentation_path.split(self.separator)[:-1]), 'mkdocs.yml')
         if not os.path.isfile(yml_path):
-            create_yaml_file(project_name, yml_path, toc)
+            create_yaml_file(self.documentation_name, yml_path, toc)
 
-        index_path = os.path.join(output_path, 'index.md')
+        index_path = os.path.join(self.documentation_path, 'index.md')
         if not os.path.isfile(index_path):
-            create_index_file(project_name, index_path)
+            create_index_file(self.documentation_name, index_path, f"{self.package_path}{self.separator}")
+
+    def __create_template_ignore_file(self):
+        with open(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json", "w", encoding="utf-8") as json_file:
+            json_file.write(json.dumps(constants.IGNORE_JSON_TEMPLATE))
 
 
-def build_file_tree(path, separator, ignored_prefix='__'):
+def build_file_tree(package_path, documentation_path, separator):
     """Recursively reads and builds the file structure.
 
-    :param path: The source path that is going to be read
-    :type path: string
-    :param separator: Seperator of the file system of the os
+    :param package_path: the source path that is going to be read
+    :type package_path: string
+    :param documentation_path: the path of the folder that is going to contain outputs
+    :type package_path: string
+    :param separator: seperator of the file system of the os
     :type separator: string
-    :param ignored_prefix: Prefix of the files that are going to be ignored, defaults to '__'
-    :type ignored_prefix: string
-    :return: The root of a file tree
+    :return: the root of a file tree
     :rtype: stibnite.file_operations.FolderType
     """
-    for path, dirs, files in os.walk(path):
+    for path, dirs, files in os.walk(package_path):
         if len(dirs) == 0 and len(files) == 0:
             return None
         current_node = FolderType(path.split(separator)[-1])
         for directory in dirs:
-            if directory[:2] != ignored_prefix:
-                node_candidate = build_file_tree(os.path.join(path, directory), separator, ignored_prefix)
+            if not is_ignored(directory, f"{documentation_path}{separator}"):
+                node_candidate = build_file_tree(os.path.join(path, directory), documentation_path, separator)
                 if node_candidate is not None:
                     current_node.add_folder(node_candidate)
 
         for file in files:
-            if file[:2] != ignored_prefix and file.split('.')[-1] == "py":
+            if not is_ignored(file, f"{documentation_path}{separator}") and file.split('.')[-1] == "py":
                 module = import_module(file.split('.')[0], os.path.join(path, file))
 
                 classes = [
@@ -173,19 +220,19 @@ def build_file_tree(path, separator, ignored_prefix='__'):
 def write_file_tree(element, current_path, output_path, separator, toc, depth):
     """Recursively writes the documentation and creates the yaml file.
 
-    :param element: The current folder in the file tree
+    :param element: the current folder in the file tree
     :type element: stibnite.file_operations.FolderType
-    :param current_path: Path of the current folder in the file tree
+    :param current_path: path of the current folder in the file tree
     :type current_path: string
-    :param output_path: The path of the folder that is going to contain outputs
+    :param output_path: the path of the folder that is going to contain outputs
     :type output_path: string
-    :param separator: Seperator of the file system of the os
+    :param separator: seperator of the file system of the os
     :type separator: string
-    :param toc: Contents of the yaml file
+    :param toc: contents of the yaml file
     :type toc: string
-    :param depth: The depth of the recursive function currently in
+    :param depth: the depth of the recursive function currently in
     :type depth: int
-    :return: Contents of the yaml file
+    :return: contents of the yaml file
     :rtype: string
     """
     toc += "    " * depth + "- " + element.name + ":\n"
@@ -197,33 +244,42 @@ def write_file_tree(element, current_path, output_path, separator, toc, depth):
             toc = write_file_tree(folder, new_path, output_path, separator, toc, depth+1)
     if len(element.files) > 0:
         for name, file in element.files.items():
-            file_p = open(f"{current_path}{separator}{name.split('.')[0]}.{file.documentation[constants.FORMAT]}", "w",
-                          encoding="utf-8")
-            file_p.write(file.documentation[constants.CONTENT])
-            file_p.close()
+            if file.documentation[constants.CONTENT] != "":
+                file_p = open(f"{current_path}{separator}{name.split('.')[0]}.{file.documentation[constants.FORMAT]}", "w",
+                              encoding="utf-8")
+                file_p.write(file.documentation[constants.CONTENT])
+                file_p.close()
 
-            toc += "    " * (depth + 1) + "- " + f"{'/'.join(current_path[len(output_path)+1:].split(separator))}" \
-                                                 f"/{name.split('.')[0]}.{file.documentation[constants.FORMAT]}\n"
+                toc += "    " * (depth + 1) + "- " + f"{'/'.join(current_path[len(output_path)+1:].split(separator))}" \
+                                                     f"/{name.split('.')[0]}.{file.documentation[constants.FORMAT]}\n"
     return toc
 
 
 def create_yaml_file(project_name, yaml_file_path, toc):
     """Creates and writes the yaml file.
 
-    :param project_name: Name of the project
+    :param project_name: name of the project
     :type project_name: string
-    :param yaml_file_path: The path of the yaml file that is going to be written at
+    :param yaml_file_path: the path of the yaml file that is going to be written at
     :type yaml_file_path: string
-    :param toc: Contents of the yaml file
+    :param toc: contents of the yaml file
     :type toc: string
     """
     yaml_file = open(yaml_file_path, "w", encoding="utf-8")
-    content = """site_name: {}
+    content = f"""site_name: {project_name}
 theme:
   name: 'material'
+  palette:
+    primary: indigo
+  features:
+    - navigation.tabs
+  icon:
+    repo: fontawesome/brands/git-alt
+repo_name: csci-arch/stibnite
+repo_url: https://github.com/csci-arch/stibnite
 nav:
     - Home: index.md
-{}
+{toc}
 markdown_extensions:
     - toc:
         toc_depth: 3
@@ -237,24 +293,28 @@ markdown_extensions:
     - pymdownx.emoji
     - pymdownx.inlinehilite
     - pymdownx.magiclink
-    """.format(
-        project_name, toc
-    )
+    """
     yaml_file.writelines(content)
     yaml_file.close()
 
 
-def create_index_file(project_name, index_file_path):
+def create_index_file(project_name, index_file_path, package_path):
     """Creates and writes the index file.
 
     :param project_name: Name of the project
     :type project_name: string
     :param index_file_path: The path of the index file that is going to be written at
     :type index_file_path: string
+    :param package_path: path of the source package
+    :type package_path: string
     """
     index_file = open(index_file_path, "w", encoding="utf-8")
-    content = """# Welcome to {0}
-This website contains the documentation for the wonderful project {0}
-""".format(project_name)
+    try:
+        with open(f"{package_path}README.md", "r", encoding="utf-8") as fh:
+            long_description = fh.read()
+    except:
+        long_description = ""
+    content = f"""# Welcome to {project_name}
+{long_description}"""
     index_file.writelines(content)
     index_file.close()

@@ -17,14 +17,17 @@ class DocumentationManager:
     :type input_style: string
     """
     def __init__(self, source_path, output_path, os_name, output_style, input_style):
-        self.package_name = source_path.split(constants.separator_dict[os_name])[-1]
+        self.package_name = os.path.abspath(source_path).split(constants.SEPARATOR_DICT[os_name])[-1]
         self.package_path = os.path.abspath(source_path)
-        self.documentation_name = output_path.split(constants.separator_dict[os_name])[-1]
-        self.documentation_path = os.path.join(os.path.abspath(output_path), "docs")
+        self.documentation_name = os.path.abspath(output_path).split(constants.SEPARATOR_DICT[os_name])[-1]
+        self.documentation_path = os.path.abspath(output_path)
         self.os_name = os_name
         self.input_style = input_style
         self.output_style = output_style
-        self.file_operator = file_operations.FileOperations()
+        self.file_operator = file_operations.FileOperations(self.package_path,
+                                                            self.documentation_path,
+                                                            self.documentation_name,
+                                                            self.os_name)
         self.file_structure = self.get_styled_structure(self.get_file_structure())
 
     def get_file_structure(self):
@@ -33,7 +36,7 @@ class DocumentationManager:
         :return: The root of the file structure
         :rtype: stibnite.file_operations.FolderType
         """
-        return self.file_operator.read_file_structure(self.package_path, self.os_name)
+        return self.file_operator.read_file_structure()
 
     def get_styled_structure(self, file_structure):
         """Stylizes and creates the documentation of the source code.
@@ -49,4 +52,4 @@ class DocumentationManager:
         """Writes the documentation and other necessary files for mkdocs.
 
         """
-        self.file_operator.write_file_structure(self.file_structure, self.documentation_path, self.documentation_name, self.os_name)
+        self.file_operator.write_file_structure(self.file_structure)
