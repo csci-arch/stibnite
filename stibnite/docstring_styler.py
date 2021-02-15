@@ -59,6 +59,7 @@ class DocstringStyler:
     :type output_style: string
     """
     escape = lambda text: text.replace('_','\\_')
+    underscore_to_dash = lambda text: text.replace('_','-')
 
     def __init__(self, output_style, input_style):
         self.output_style = output_style
@@ -173,8 +174,9 @@ class DocstringStyler:
         :return: Class name stylized in markdown style
         :rtype: string
         """
-        class_name = DocstringStyler.escape(class_name)
-        return f"## **{class_name}**`#!py3 class` {{ #{class_name} data-toc-label={class_name} }}\n\n"
+        escaped_class_name = DocstringStyler.escape(class_name)
+        dashed_class_name = DocstringStyler.underscore_to_dash(class_name)
+        return f"## **{escaped_class_name}**`#!py3 class` {{ #{dashed_class_name} data-toc-label={escaped_class_name} }}\n\n"
 
     @staticmethod
     def _style_method_name_md(class_name, method_name, args):
@@ -189,9 +191,10 @@ class DocstringStyler:
         :return: Method name stylized in markdown style
         :rtype: string
         """
-        class_name = DocstringStyler.escape(class_name)
-        method_name = DocstringStyler.escape(method_name)
-        return f"### *{class_name}*.**{method_name}**`#!py3 {args}` {{ #{method_name} data-toc-label={method_name} }}\n\n"
+        escaped_class_name = DocstringStyler.escape(class_name)
+        escaped_method_name = DocstringStyler.escape(method_name)
+        dashed_method_name = DocstringStyler.underscore_to_dash(method_name)
+        return f"### *{escaped_class_name}*.**{escaped_method_name}**`#!py3 {args}` {{ #{dashed_method_name} data-toc-label={escaped_method_name} }}\n\n"
 
     @staticmethod
     def _style_function_name_md(function_name, args):
@@ -204,8 +207,9 @@ class DocstringStyler:
         :return: Function name stylized in markdown style
         :rtype: string
         """
-        function_name = DocstringStyler.escape(function_name)
-        return f"## **{function_name}**`#!py3 {args}` {{ #{function_name} data-toc-label={function_name} }}\n\n"
+        escaped_function_name = DocstringStyler.escape(function_name)
+        dashed_function_name = DocstringStyler.underscore_to_dash(function_name)
+        return f"## **{escaped_function_name}**`#!py3 {args}` {{ #{dashed_function_name} data-toc-label={escaped_function_name} }}\n\n"
 
     @staticmethod
     def _style_function_name_in_list_md(name_in_list):
