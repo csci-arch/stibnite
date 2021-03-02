@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# pycharm
+.idea/
+
+# custom
+stibnite/dev.py
+
+example/
+
+# vscode
+.vscode/
