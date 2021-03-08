@@ -1,3 +1,7 @@
+import platform
+import pathlib
+
+
 def traverse_file_structure(current, function, **inner_function_args):
     """Recursively traverses the given folder and applies the function to every file that it finds.
 
@@ -19,3 +23,12 @@ def traverse_file_structure(current, function, **inner_function_args):
 
     return current
 
+
+def get_project_path():
+    from stibnite import constants
+    project_path = ""
+    separator = constants.SEPARATOR_DICT[platform.system()]
+    for part in str(pathlib.Path().absolute()).split(separator):
+        project_path += f"{part}{separator}"
+        if "stibnite" in part:
+            return project_path

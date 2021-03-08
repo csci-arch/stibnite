@@ -170,8 +170,9 @@ class FileOperations:
             create_index_file(self.documentation_name, index_path, f"{self.package_path}{self.separator}")
 
     def __create_template_ignore_file(self):
-        with open(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json", "w", encoding="utf-8") as json_file:
-            json_file.write(json.dumps(constants.IGNORE_JSON_TEMPLATE))
+        if not os.path.exists(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json"):
+            with open(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json", "w", encoding="utf-8") as json_file:
+                json_file.write(json.dumps(constants.IGNORE_JSON_TEMPLATE))
 
 
 def build_file_tree(package_path, documentation_path, separator):
