@@ -16,8 +16,8 @@ class DocstringParser:
 
         :param docstring: Docstring that is going to be parsed
         :type docstring: string
-        :return: A tuple which contains an explanation and information about parameters
-        :rtype: A tuple that contains two value which are a string and a dictionary
+        :return: (explanation about parameters, information about parameters)
+        :rtype: (string, dictionary)
         """
         return eval(f"DocstringParser._parse_{self.style}(docstring)")
 
@@ -27,8 +27,8 @@ class DocstringParser:
 
         :param docstring: Docstring that is going to be parsed
         :type docstring: string
-        :return: A tuple which contains an explanation and information about parameters
-        :rtype: A tuple that contains two value which are a string and a dictionary
+        :return: (explanation about parameters, information about parameters)
+        :rtype: (string, dictionary)
         """
         parts = docstring.split(":rtype:")
         return_type = parts[-1] if len(parts)>1 else None
@@ -60,6 +60,7 @@ class DocstringStyler:
     """
     escape = lambda text: text.replace('_','\\_')
     underscore_to_dash = lambda text: text.replace('_','-')
+    collapse_all_white_spaces = lambda text: " ".join(text.split())
 
     def __init__(self, output_style, input_style):
         self.output_style = output_style
@@ -134,7 +135,7 @@ class DocstringStyler:
         :rtype: stibnite.core_types.ClassType
         """
         clas.name = DocstringStyler._style_class_name_md(clas.name)
-        clas.doc = DocstringStyler._style_docstring_md(clas.doc,input_style)
+        clas.doc = DocstringStyler._style_docstring_md(clas.doc, input_style)
         for i in range(len(clas.methods)):
             clas.methods[i] = DocstringStyler._style_func_md(clas.methods[i],input_style,True)
         for i in range(len(clas.functions)):
@@ -234,6 +235,8 @@ class DocstringStyler:
         :return: The docstring stylized in markdown style
         :rtype: string
         """
+        caws = DocstringStyler.collapse_all_white_spaces
+
         if input_style == constants.MARKDOWN:
             rows = docstring.split("\n")
             first_string = None
@@ -254,22 +257,18 @@ class DocstringStyler:
         else:
             explanation, params = DocstringParser(input_style).parse_docstring(docstring)
             doc = ""
-            rows = explanation.split("\n")
-            rows = [row for row in rows if row != "" and not row.isspace()]
-            for i in range(len(rows)):
-                rows[i] = rows[i].lstrip().rstrip()
-            explanation = " ".join(rows)
+            explanation = caws(explanation)
             doc += f"{explanation}\n\n" if not explanation.isspace() and explanation != "" else ""
             if len(params) > 1:
                 doc+=f"**Parameters**\n\n"
                 for i in range(1, len(params)):
                     if params[i][constants.TYPE] is not None:
-                        doc += f"> **{params[i][constants.NAME].lstrip().rstrip()}:** `{params[i][constants.TYPE].lstrip().rstrip()}` -- {params[i][constants.EXPLANATION].lstrip().rstrip()}\n\n"
+                        doc += f"> **{caws(params[i][constants.NAME])}:** `{caws(params[i][constants.TYPE])}` -- {caws(params[i][constants.EXPLANATION])}\n\n"
                     else:
-                        doc += f"> **{params[i][constants.NAME].lstrip().rstrip()}:** `n/a` -- {params[i][constants.EXPLANATION].lstrip().rstrip()}\n\n"
+                        doc += f"> **{caws(params[i][constants.NAME])}:** `n/a` -- {caws(params[i][constants.EXPLANATION])}\n\n"
             if params[0][constants.TYPE] is not None or params[0][constants.EXPLANATION] is not None:
-                doc += f"**Returns**\n\n> `{params[0][constants.TYPE].lstrip().rstrip() if params[0][constants.TYPE] is not None else 'n/a'}`"
-                desc = ' -- ' + params[0][constants.EXPLANATION].lstrip().rstrip() if params[0][constants.EXPLANATION] is not None else ''
+                doc += f"**Returns**\n\n> `{caws(params[0][constants.TYPE]) if params[0][constants.TYPE] is not None else 'n/a'}`"
+                desc = ' -- ' + caws(params[0][constants.EXPLANATION]) if params[0][constants.EXPLANATION] is not None else ''
                 doc += f"{desc}\n\n"
 
         return doc
@@ -283,12 +282,21 @@ class DocstringStyler:
         :return: The source code stylized in markdown style
         :rtype: string
         """
-        # Fixes indentations
-        source = source_code.split("\n")
-        nb_indent = len(source[0]) - len(source[0].lstrip())
+        # Fixes indentations and empty space issues
+        rows = source_code.split("\n")
+        first_string = None
+        idx_first_string = None
+        for i in range(len(rows)):
+            if not rows[i].isspace() and rows[i] != '':
+                first_string = rows[i]
+                idx_first_string = i
+                break
+        rows = rows[idx_first_string:]
+        nb_indent = len(first_string) - len(first_string.lstrip())
         source_code = ""
-        for i in range(len(source)):
-            source_code += f"\t{source[i][nb_indent:]}\n"
+        for i in range(len(rows)):
+            source_code += f"\t{rows[i][nb_indent:]}\n"
+        # Converting into md style
         return f'??? info "Source Code" \n\t```py3 linenums="1 1 2" \n\n{source_code}\n\t```\n\n'
 
 
