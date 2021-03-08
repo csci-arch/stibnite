@@ -56,7 +56,7 @@ def test_write_file_structure():
     assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}ignored_prefixes_and_names.json")
     assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}mkdocs.yml")
     assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}docs{separator}index.md")
-    assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}docs")
+
     os.chdir(f"{stibnite_path}tests{separator}test-doc")
     call(["mkdocs", "build", "--clean"])
     os.chdir(f"{stibnite_path}tests")
