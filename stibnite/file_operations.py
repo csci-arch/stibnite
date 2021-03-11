@@ -1,21 +1,20 @@
 from stibnite import constants, core_types
 import importlib.util as module_loader
-from functools import lru_cache
 import inspect
-import json
 import sys
 import os
 
 
 class FileType:
-    """This is a class that represents a python file or a leaf in a tree and contains classes and functions of the same python file.
+    """This is a class that represents a python file or a leaf in a tree and contains classes and functions of the same
+    python file.
 
     :param name: Name of the file
     :type name: string
     :param classes: Classes in the file
     :type classes: list of stibnite.core_types.ClassType
     :param functions: Functions in the file
-    :type ofunctionsbj: list of stibnite.core_types.FunctionType
+    :type functions: list of stibnite.core_types.FunctionType
     """
     def __init__(self, name, classes, functions):
         self.name = name
@@ -84,36 +83,19 @@ def import_module(module_name, module_path):
     return module
 
 
-@lru_cache(maxsize=1)
-def get_json_file(documentation_path):
-    """Reads json file and returns it. This method works only ones and returns from cache for the other calls
-
-    :param documentation_path: path of the documentation
-    :type documentation_path: string
-    :return: json file content
-    :rtype: string
-    """
-    with open(f"{documentation_path}ignored_prefixes_and_names.json", "r", encoding="utf-8") as json_file:
-        return json_file.read()
-
-
-def is_ignored(name, documentation_path):
-    """Checks if the given name has a ignored prefix or name.
+def is_ignored(name, ignored_file_checker):
+    """Checks if the given path is ignored or not.
 
     :param name: file or folder name
     :type name: string
-    :param documentation_path: path of the documentation
-    :type documentation_path: string
+    :param ignored_file_checker: checker object for checking ignored paths
+    :type ignored_file_checker: pathspec.PathSpec
     :return: has a ignored prefix, name or not
     :rtype: bool
     """
-    ignored_dict = json.loads(get_json_file(documentation_path))
-    for prefix in ignored_dict["prefixes"]:
-        if name[:len(prefix)] == prefix:
-            return True
-    if name in ignored_dict['names']:
-        return True
-    return False
+    if ignored_file_checker is None:
+        return False
+    return ignored_file_checker.match_file(name)
 
 
 class FileOperations:
@@ -141,16 +123,25 @@ class FileOperations:
         :return: a file structure of the source package
         :rtype: stibnite.file_operations.FolderType
         """
+        # Reads stibnite-ignore file and creates ignored_file_checker object with given patterns
+        ignored_file_checker = None
+        if os.path.exists(f"{self.package_path}{self.separator}.stibnite-ignore"):
+            import pathspec
+            with open(f"{self.package_path}{self.separator}.stibnite-ignore", "r") as f:
+                lines = f.read().splitlines()
+            ignored_file_checker = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, lines)
+
         sys.path.insert(0,  self.package_path)
-        self.__create_template_ignore_file()
-        return build_file_tree(self.package_path, self.documentation_path, self.separator)
+        return build_file_tree(self.package_path, self.documentation_path, self.separator, ignored_file_checker)
 
     def write_file_structure(self, file_structure):
-        """Writes the documentation of the whole file structure and some other necessary files to run mkdocs such as index page and yaml file.
+        """Writes the documentation of the whole file structure and some other necessary files to run mkdocs such as
+        index page and yaml file.
 
         :param file_structure: the root of the file structure that is going to be written
         :type file_structure: stibnite.file_operations.FolderType
         """
+        # Firstly, creates documentation path if not exists
         self.documentation_path = os.path.join(os.path.abspath(self.documentation_path), "docs")
         if not os.path.exists(self.documentation_path):
             os.mkdir(self.documentation_path)
@@ -159,46 +150,50 @@ class FileOperations:
         if not os.path.exists(current_path):
             os.mkdir(current_path)
 
+        # File writing section
         toc = write_file_tree(file_structure, current_path, self.documentation_path, self.separator, "", 1)
 
+        # Creates yml file which is config file for mkdocs
         yml_path = os.path.join(self.separator.join(self.documentation_path.split(self.separator)[:-1]), 'mkdocs.yml')
         if not os.path.isfile(yml_path):
             create_yaml_file(self.documentation_name, yml_path, toc)
 
+        # Creates index file which is the main page of the documentation
         index_path = os.path.join(self.documentation_path, 'index.md')
         if not os.path.isfile(index_path):
             create_index_file(self.documentation_name, index_path, f"{self.package_path}{self.separator}")
 
-    def __create_template_ignore_file(self):
-        if not os.path.exists(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json"):
-            with open(f"{self.documentation_path}{self.separator}ignored_prefixes_and_names.json", "w", encoding="utf-8") as json_file:
-                json_file.write(json.dumps(constants.IGNORE_JSON_TEMPLATE))
 
-
-def build_file_tree(package_path, documentation_path, separator):
+def build_file_tree(package_path, documentation_path, separator, ignored_file_checker):
     """Recursively reads and builds the file structure.
 
     :param package_path: the source path that is going to be read
     :type package_path: string
     :param documentation_path: the path of the folder that is going to contain outputs
     :type package_path: string
-    :param separator: seperator of the file system of the os
+    :param separator: separator of the file system of the os
     :type separator: string
+    :param ignored_file_checker: checker object for checking ignored paths
+    :type ignored_file_checker: pathspec.PathSpec
     :return: the root of a file tree
     :rtype: stibnite.file_operations.FolderType
     """
+    # Traverses given package path recursively and creates Folder and File Tree structure with it
     for path, dirs, files in os.walk(package_path):
-        if len(dirs) == 0 and len(files) == 0:
-            return None
         current_node = FolderType(path.split(separator)[-1])
         for directory in dirs:
-            if not is_ignored(directory, f"{documentation_path}{separator}"):
-                node_candidate = build_file_tree(os.path.join(path, directory), documentation_path, separator)
+            # Checks the directory whether ignored directory or not in stibnite-ignore file
+            if not is_ignored(f"{path}{separator}{directory}{separator}", ignored_file_checker):
+                node_candidate = build_file_tree(os.path.join(path, directory),
+                                                 documentation_path,
+                                                 separator,
+                                                 ignored_file_checker)
                 if node_candidate is not None:
                     current_node.add_folder(node_candidate)
 
         for file in files:
-            if not is_ignored(file, f"{documentation_path}{separator}") and file.split('.')[-1] == "py":
+            # Checks the file whether ignored directory or not in stibnite-ignore file
+            if not is_ignored(f"{path}{separator}{file}", ignored_file_checker) and file.split('.')[-1] == "py":
                 module = import_module(file.split('.')[0], os.path.join(path, file))
 
                 classes = [
@@ -215,6 +210,10 @@ def build_file_tree(package_path, documentation_path, separator):
                 current_node.add_file(FileType(file,
                                                functions=functions,
                                                classes=classes))
+
+        if len(current_node.folders) == 0 and len(current_node.files) == 0:
+            return None
+
         return current_node
 
 
@@ -236,6 +235,8 @@ def write_file_tree(element, current_path, output_path, separator, toc, depth):
     :return: contents of the yaml file
     :rtype: string
     """
+    # Traverses our Tree structure and creates folders and files respect to it
+    # Creates indented table of contents structure for using in yml file
     toc += "    " * depth + "- " + element.name + ":\n"
     if len(element.folders) > 0:
         for name, folder in element.folders.items():
@@ -246,7 +247,8 @@ def write_file_tree(element, current_path, output_path, separator, toc, depth):
     if len(element.files) > 0:
         for name, file in element.files.items():
             if file.documentation[constants.CONTENT] != "":
-                file_p = open(f"{current_path}{separator}{name.split('.')[0]}.{file.documentation[constants.FORMAT]}", "w",
+                file_p = open(f"{current_path}{separator}{name.split('.')[0]}.{file.documentation[constants.FORMAT]}",
+                              "w",
                               encoding="utf-8")
                 file_p.write(file.documentation[constants.CONTENT])
                 file_p.close()
