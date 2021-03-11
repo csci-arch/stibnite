@@ -5,12 +5,14 @@ import webbrowser
 import platform
 import os
 
-
 if __name__ == "__main__":
     source_path = r""
     output_path = r""
 
-    DocumentationManager(source_path, output_path, platform.system(), input_style=, output_style=).write_file_structure()
+    # Be careful about input output style :)
+    DocumentationManager(source_path, output_path, platform.system(),
+                         input_style=,
+                         output_style=).write_file_structure()
 
     os.chdir(output_path)
 

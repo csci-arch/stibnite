@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/csci-arch/stibnite",
     packages=setuptools.find_packages(),
     entry_points={"console_scripts": ["stibnite=stibnite.main:main"]},
-    install_requires=['mkdocs', 'mkdocs-material', 'pymdown-extensions'],
+    install_requires=['mkdocs', 'mkdocs-material', 'pymdown-extensions', 'pathspec'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
