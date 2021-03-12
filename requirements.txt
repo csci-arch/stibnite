@@ -1,0 +1,2 @@
+mkdocs-material==7.0.5
+pathspec==0.8.1

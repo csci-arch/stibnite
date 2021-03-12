@@ -26,9 +26,5 @@ def traverse_file_structure(current, function, **inner_function_args):
 
 def get_project_path():
     from stibnite import constants
-    project_path = ""
     separator = constants.SEPARATOR_DICT[platform.system()]
-    for part in str(pathlib.Path().absolute()).split(separator):
-        project_path += f"{part}{separator}"
-        if "stibnite" in part:
-            return project_path
+    return f"{pathlib.Path(__file__).parent.parent}{separator}"
