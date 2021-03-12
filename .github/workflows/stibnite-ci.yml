@@ -1,9 +1,9 @@
 name: stibnite CI
 on:
   push:
-    branches: [ iss15 ]
+    branches: [ main ]
   pull_request:
-    branches: [ iss15 ]
+    branches: [ main ]
 
 jobs:
   build:
