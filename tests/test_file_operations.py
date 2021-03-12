@@ -12,8 +12,6 @@ def test_read_file_structure():
     stibnite_path = utils.get_project_path()
     separator = constants.SEPARATOR_DICT[platform.system()]
     try:
-        import pathlib
-        print(pathlib.Path(__file__))
         with open(f"{stibnite_path}example{separator}.stibnite-ignore", "w") as f:
             f.write("__init__.py\n__pycache__/")
         os.mkdir(f"{stibnite_path}tests{separator}test-doc")
