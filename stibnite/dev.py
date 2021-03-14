@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
     # Be careful about input output style :)
     DocumentationManager(source_path, output_path, platform.system(),
-                         input_style=,
-                         output_style=).write_file_structure()
+                         input_style=constants.RESTRUCTERED,
+                         output_style=constants.MARKDOWN).write_file_structure()
 
     os.chdir(output_path)
 
