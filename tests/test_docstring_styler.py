@@ -1,7 +1,7 @@
-import pytest
-import platform
 import inspect
+import pytest
 import copy
+import os
 
 
 def test_docstringparser_parse_docstring():
@@ -216,7 +216,8 @@ def this_is_an_example_source_code(with_multiple_tabs, and, spaces):
         f'??? info "Source Code" \n\t```py3 linenums="1 1 2" \n\n', "")
 
     assert res_case1.split("\n")[0][0] == "\t"
-    assert res_case1.split("\n")[0].split("\t")[1] == "def this_is_an_example_source_code(with_multiple_tabs, and, spaces):"
+    assert res_case1.split("\n")[0].split("\t")[1] == \
+           "def this_is_an_example_source_code(with_multiple_tabs, and, spaces):"
 
     assert res_case2.split("\n")[0][0] == "\t"
     assert res_case2.split("\n")[0].split("\t")[1] == "def inner_tab():"
@@ -302,12 +303,18 @@ def test_docstringstyler__style_docstring_md():
     expected_case2 = "Example one line below\n\n"
     expected_case3 = "Example without param\n\n"
     expected_case4 = "Example with param\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n"
-    expected_case5 = "Example without param type test\n\n**Parameters**\n\n> **x:** `n/a` -- example text for param x\n\n"
-    expected_case6 = "Example with param without empty line\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n"
-    expected_case7 = "Example with return\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n**Returns**\n\n> `n/a` -- description of return\n\n"
-    expected_case8 = "Example with return and return type\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n**Returns**\n\n> `some return type` -- description of return\n\n"
-    expected_case9 = "Example with multi text param\n\n**Parameters**\n\n> **x:** `sometype` -- example multi text for param x\n\n"
-    expected_case10 = "Example with return type but without return desc\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n**Returns**\n\n> `somethingweird`\n\n"
+    expected_case5 = "Example without param type test\n\n**Parameters**\n\n> **x:** `n/a` -- example text for param " \
+                     "x\n\n"
+    expected_case6 = "Example with param without empty line\n\n**Parameters**\n\n> **x:** `sometype` -- example text" \
+                     " for param x\n\n"
+    expected_case7 = "Example with return\n\n**Parameters**\n\n> **x:** `sometype` -- example text for param x\n\n" \
+                     "**Returns**\n\n> `n/a` -- description of return\n\n"
+    expected_case8 = "Example with return and return type\n\n**Parameters**\n\n> **x:** `sometype` -- example text " \
+                     "for param x\n\n**Returns**\n\n> `some return type` -- description of return\n\n"
+    expected_case9 = "Example with multi text param\n\n**Parameters**\n\n> **x:** `sometype` -- example multi text " \
+                     "for param x\n\n"
+    expected_case10 = "Example with return type but without return desc\n\n**Parameters**\n\n> **x:** `sometype` -- " \
+                      "example text for param x\n\n**Returns**\n\n> `somethingweird`\n\n"
 
     res_case1 = DocstringStyler._style_docstring_md(case1, constants.RESTRUCTERED)
     res_case2 = DocstringStyler._style_docstring_md(case2, constants.RESTRUCTERED)
@@ -350,9 +357,9 @@ def test_docstringstyler__style_class_md():
     from stibnite.utils import get_project_path
     from stibnite.file_operations import import_module
     from stibnite.docstring_styler import DocstringStyler
-    separator = constants.SEPARATOR_DICT[platform.system()]
 
-    module = import_module("src.class_and_function", f"{get_project_path()}example{separator}src{separator}class_and_function.py")
+    module = import_module("src.class_and_function",
+                           os.path.join(get_project_path(), "example", "src", "class_and_function.py"))
 
     shark_class = [
         ClassType(obj)
@@ -368,15 +375,14 @@ def test_docstringstyler__style_class_md():
 
 
 def test_docstringstyler__style_func_md():
-    from stibnite.core_types import FunctionType,ClassType
+    from stibnite.core_types import FunctionType, ClassType
     from stibnite import constants
     from stibnite.utils import get_project_path
     from stibnite.file_operations import import_module
     from stibnite.docstring_styler import DocstringStyler
-    separator = constants.SEPARATOR_DICT[platform.system()]
 
     module = import_module("src.class_and_function",
-                           f"{get_project_path()}example{separator}src{separator}class_and_function.py")
+                           os.path.join(get_project_path(), "example", "src", "class_and_function.py"))
 
     shark_class = [
         ClassType(obj)
@@ -403,7 +409,8 @@ def test_docstringstyler__style_func_md():
     result = DocstringStyler._style_func_md(copy.deepcopy(swimclass_method), constants.MARKDOWN, ismethod=True)
 
     assert isinstance(result, FunctionType)
-    assert result.name == DocstringStyler._style_method_name_md(swimclass_method.obj.__self__.__class__.__name__, swimclass_method.name, swimclass_method.args)
+    assert result.name == DocstringStyler._style_method_name_md(swimclass_method.obj.__self__.__class__.__name__,
+                                                                swimclass_method.name, swimclass_method.args)
     assert result.name_in_list == DocstringStyler._style_function_name_in_list_md(swimclass_method.name_in_list)
     assert result.doc == DocstringStyler._style_docstring_md(swimclass_method.doc, constants.MARKDOWN)
     assert result.source == DocstringStyler._style_source_code_md(swimclass_method.source)
@@ -415,10 +422,9 @@ def test_docstringstyler__style_file_md():
     from stibnite.utils import get_project_path
     from stibnite.file_operations import import_module, FileType
     from stibnite.docstring_styler import DocstringStyler
-    separator = constants.SEPARATOR_DICT[platform.system()]
 
     module = import_module("src.class_and_function",
-                           f"{get_project_path()}example{separator}src{separator}class_and_function.py")
+                           os.path.join(get_project_path(), "example", "src", "class_and_function.py"))
 
     classes = [
         ClassType(obj)
@@ -442,16 +448,16 @@ def test_docstringstyler__style_file_md():
     assert isinstance(result.documentation, dict)
     assert isinstance(result.documentation[constants.CONTENT], str)
 
+
 def test_docstringstyler_get_styled_structure():
     from stibnite.core_types import FunctionType, ClassType
     from stibnite import constants
     from stibnite.utils import get_project_path
     from stibnite.file_operations import import_module, FileType, FolderType
     from stibnite.docstring_styler import DocstringStyler
-    separator = constants.SEPARATOR_DICT[platform.system()]
 
     module = import_module("src.class_and_function",
-                           f"{get_project_path()}example{separator}src{separator}class_and_function.py")
+                           os.path.join(get_project_path(), "example", "src", "class_and_function.py"))
 
     classes = [
         ClassType(obj)
@@ -479,4 +485,3 @@ def test_docstringstyler_get_styled_structure():
 
 if __name__ == "__main__":
     pytest.main()
-

@@ -2,7 +2,6 @@ from stibnite.documentation_manager import DocumentationManager
 from stibnite import constants
 from subprocess import call
 import webbrowser
-import platform
 import os
 
 if __name__ == "__main__":
@@ -10,7 +9,7 @@ if __name__ == "__main__":
     output_path = r""
 
     # Be careful about input output style :)
-    DocumentationManager(source_path, output_path, platform.system(),
+    DocumentationManager(source_path, output_path,
                          input_style=constants.RESTRUCTERED,
                          output_style=constants.MARKDOWN).write_file_structure()
 
