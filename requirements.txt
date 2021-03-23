@@ -1,2 +1,2 @@
 mkdocs-material==7.0.5
-pathspec==0.8.1
+igittigitt==2.0.4

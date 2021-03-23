@@ -89,13 +89,13 @@ def is_ignored(name, ignored_file_checker):
     :param name: file or folder name
     :type name: string
     :param ignored_file_checker: checker object for checking ignored paths
-    :type ignored_file_checker: pathspec.PathSpec
+    :type ignored_file_checker: igittigitt.IgnoreParser
     :return: has a ignored prefix, name or not
     :rtype: bool
     """
-    if ignored_file_checker is None:
-        return False
-    return ignored_file_checker.match_file(name)
+    # if ignored_file_checker.match(name):
+    #     print(f"{name} is ignored.")
+    return ignored_file_checker.match(name)
 
 
 class FileOperations:
@@ -107,15 +107,11 @@ class FileOperations:
     :type documentation_path: string
     :param documentation_name: name of the documentation will be create
     :type documentation_name: string
-    :param os_name: name of the os that user is using
-    :type os_name: string
     """
-    def __init__(self, package_path, documentation_path, documentation_name, os_name):
+    def __init__(self, package_path, documentation_path, documentation_name):
         self.package_path = package_path
         self.documentation_path = documentation_path
         self.documentation_name = documentation_name
-        self.os_name = os_name
-        self.separator = constants.SEPARATOR_DICT[self.os_name]
 
     def read_file_structure(self):
         """Reads the whole package and its subpackages and returns a file structure.
@@ -124,15 +120,16 @@ class FileOperations:
         :rtype: stibnite.file_operations.FolderType
         """
         # Reads stibnite-ignore file and creates ignored_file_checker object with given patterns
-        ignored_file_checker = None
-        if os.path.exists(f"{self.package_path}{self.separator}.stibnite-ignore"):
-            import pathspec
-            with open(f"{self.package_path}{self.separator}.stibnite-ignore", "r") as f:
-                lines = f.read().splitlines()
-            ignored_file_checker = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, lines)
+        import igittigitt
+        ignored_file_checker = igittigitt.IgnoreParser()
+        if os.path.exists(os.path.join(self.package_path, ".stibnite-ignore")):
+            ignored_file_checker.parse_rule_files(base_dir=self.package_path, filename=".stibnite-ignore")
+        # This rule helps to ignore hidden files
+        ignored_file_checker.add_rule(base_path=self.package_path, pattern=".*")
 
         sys.path.insert(0,  self.package_path)
-        return build_file_tree(self.package_path, self.documentation_path, self.separator, ignored_file_checker)
+
+        return build_file_tree(self.package_path, self.documentation_path, ignored_file_checker)
 
     def write_file_structure(self, file_structure):
         """Writes the documentation of the whole file structure and some other necessary files to run mkdocs such as
@@ -142,58 +139,56 @@ class FileOperations:
         :type file_structure: stibnite.file_operations.FolderType
         """
         # Firstly, creates documentation path if not exists
+        documentation_path_parent = self.documentation_path
         self.documentation_path = os.path.join(os.path.abspath(self.documentation_path), "docs")
         if not os.path.exists(self.documentation_path):
             os.mkdir(self.documentation_path)
 
-        current_path = f"{self.documentation_path}{self.separator}{file_structure.name}"
+        current_path = os.path.join(self.documentation_path, file_structure.name)
         if not os.path.exists(current_path):
             os.mkdir(current_path)
 
         # File writing section
-        toc = write_file_tree(file_structure, current_path, self.documentation_path, self.separator, "", 1)
+        toc = write_file_tree(file_structure, current_path, self.documentation_path, "", 1)
 
         # Creates yml file which is config file for mkdocs
-        yml_path = os.path.join(self.separator.join(self.documentation_path.split(self.separator)[:-1]), 'mkdocs.yml')
+        yml_path = os.path.join(documentation_path_parent, "mkdocs.yml")
         if not os.path.isfile(yml_path):
             create_yaml_file(self.documentation_name, yml_path, toc)
 
         # Creates index file which is the main page of the documentation
         index_path = os.path.join(self.documentation_path, 'index.md')
         if not os.path.isfile(index_path):
-            create_index_file(self.documentation_name, index_path, f"{self.package_path}{self.separator}")
+            create_index_file(self.documentation_name, index_path, self.package_path)
 
 
-def build_file_tree(package_path, documentation_path, separator, ignored_file_checker):
+def build_file_tree(package_path, documentation_path, ignored_file_checker):
     """Recursively reads and builds the file structure.
 
     :param package_path: the source path that is going to be read
     :type package_path: string
     :param documentation_path: the path of the folder that is going to contain outputs
     :type package_path: string
-    :param separator: separator of the file system of the os
-    :type separator: string
     :param ignored_file_checker: checker object for checking ignored paths
-    :type ignored_file_checker: pathspec.PathSpec
+    :type ignored_file_checker: igittigitt.IgnoreParser
     :return: the root of a file tree
     :rtype: stibnite.file_operations.FolderType
     """
     # Traverses given package path recursively and creates Folder and File Tree structure with it
     for path, dirs, files in os.walk(package_path):
-        current_node = FolderType(path.split(separator)[-1])
+        current_node = FolderType(path.split(os.sep)[-1])
         for directory in dirs:
             # Checks the directory whether ignored directory or not in stibnite-ignore file
-            if not is_ignored(f"{path}{separator}{directory}{separator}", ignored_file_checker):
+            if not is_ignored(os.path.join(path, directory, ""), ignored_file_checker):
                 node_candidate = build_file_tree(os.path.join(path, directory),
                                                  documentation_path,
-                                                 separator,
                                                  ignored_file_checker)
                 if node_candidate is not None:
                     current_node.add_folder(node_candidate)
 
         for file in files:
             # Checks the file whether ignored directory or not in stibnite-ignore file
-            if not is_ignored(f"{path}{separator}{file}", ignored_file_checker) and file.split('.')[-1] == "py":
+            if not is_ignored(os.path.join(path, file), ignored_file_checker) and file.split('.')[-1] == "py":
                 module = import_module(file.split('.')[0], os.path.join(path, file))
 
                 classes = [
@@ -217,7 +212,7 @@ def build_file_tree(package_path, documentation_path, separator, ignored_file_ch
         return current_node
 
 
-def write_file_tree(element, current_path, output_path, separator, toc, depth):
+def write_file_tree(element, current_path, output_path, toc, depth):
     """Recursively writes the documentation and creates the yaml file.
 
     :param element: the current folder in the file tree
@@ -226,8 +221,6 @@ def write_file_tree(element, current_path, output_path, separator, toc, depth):
     :type current_path: string
     :param output_path: the path of the folder that is going to contain outputs
     :type output_path: string
-    :param separator: seperator of the file system of the os
-    :type separator: string
     :param toc: contents of the yaml file
     :type toc: string
     :param depth: the depth of the recursive function currently in
@@ -240,20 +233,19 @@ def write_file_tree(element, current_path, output_path, separator, toc, depth):
     toc += "    " * depth + "- " + element.name + ":\n"
     if len(element.folders) > 0:
         for name, folder in element.folders.items():
-            new_path = f'{current_path}{separator}{name}'
+            new_path = os.path.join(current_path, name)
             if not os.path.exists(new_path):
                 os.mkdir(new_path)
-            toc = write_file_tree(folder, new_path, output_path, separator, toc, depth+1)
+            toc = write_file_tree(folder, new_path, output_path, toc, depth+1)
     if len(element.files) > 0:
         for name, file in element.files.items():
             if file.documentation[constants.CONTENT] != "":
-                file_p = open(f"{current_path}{separator}{name.split('.')[0]}.{file.documentation[constants.FORMAT]}",
-                              "w",
-                              encoding="utf-8")
-                file_p.write(file.documentation[constants.CONTENT])
-                file_p.close()
+                with open(os.path.join(current_path, f"{name.split('.')[0]}.{file.documentation[constants.FORMAT]}"),
+                          "w",
+                          encoding="utf-8") as f_p:
+                    f_p.write(file.documentation[constants.CONTENT])
 
-                toc += "    " * (depth + 1) + "- " + f"{'/'.join(current_path[len(output_path)+1:].split(separator))}" \
+                toc += "    " * (depth + 1) + "- " + f"{'/'.join(current_path[len(output_path)+1:].split(os.sep))}" \
                                                      f"/{name.split('.')[0]}.{file.documentation[constants.FORMAT]}\n"
     return toc
 
@@ -313,9 +305,9 @@ def create_index_file(project_name, index_file_path, package_path):
     """
     index_file = open(index_file_path, "w", encoding="utf-8")
     try:
-        with open(f"{package_path}README.md", "r", encoding="utf-8") as fh:
+        with open(os.path.join(package_path, "README.md"), "r", encoding="utf-8") as fh:
             long_description = fh.read()
-    except:
+    except Exception as e:
         long_description = ""
     content = f"""# Welcome to {project_name}
 {long_description}"""

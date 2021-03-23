@@ -57,7 +57,7 @@ def fullsupport(x: float, y: float = 3):
 
     and code inline with syntax highlights: `#!py3 import numpy as np`
 
-    Link to other sites (http://www.google.com) or other part of the doc [function test](zoomext.md#test)
+    Link to other sites (http://www.google.com)
 
     ??? note "note block with display"
         You can also add note on a block that can be hidden
@@ -69,7 +69,6 @@ def fullsupport(x: float, y: float = 3):
 
     """
     return np.max(x, y)
-
 
 
 def test(x: int):

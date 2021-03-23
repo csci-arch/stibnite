@@ -1,4 +1,3 @@
-import platform
 import pathlib
 
 
@@ -25,6 +24,9 @@ def traverse_file_structure(current, function, **inner_function_args):
 
 
 def get_project_path():
-    from stibnite import constants
-    separator = constants.SEPARATOR_DICT[platform.system()]
-    return f"{pathlib.Path(__file__).parent.parent}{separator}"
+    """Returns stibnite project path
+
+    :return: project path
+    :rtype: string
+    """
+    return pathlib.Path(__file__).parent.parent

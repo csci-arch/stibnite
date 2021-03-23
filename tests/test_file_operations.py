@@ -1,40 +1,41 @@
-import os
+from subprocess import call
 import shutil
 import pytest
-import platform
-from subprocess import call
+import os
 
 
 def test_read_file_structure():
-    from stibnite import constants, utils
+    from stibnite import utils
     from stibnite.core_types import FunctionType, ClassType
-    from stibnite.file_operations import FileOperations, FolderType, FileType
+    from stibnite.file_operations import FileOperations, FolderType
     stibnite_path = utils.get_project_path()
-    separator = constants.SEPARATOR_DICT[platform.system()]
     try:
-        with open(f"{stibnite_path}example{separator}.stibnite-ignore", "w") as f:
-            f.write("__init__.py\n__pycache__/")
-        os.mkdir(f"{stibnite_path}tests{separator}test-doc")
-        file_operations = FileOperations(f"{stibnite_path}example",
-                                         f"{stibnite_path}tests{separator}test-doc",
-                                         "test_doc",
-                                         platform.system())
+        with open(os.path.join(stibnite_path, "example", ".stibnite-ignore"), "w") as f:
+            f.write("__init__.py\n__pycache__/\nsrc/subfolder2/subfolder3/\nbuild/")
+
+        os.mkdir(os.path.join(stibnite_path, "tests", "test-doc"))
+
+        file_operations = FileOperations(os.path.join(stibnite_path, "example"),
+                                         os.path.join(stibnite_path, "tests", "test-doc"),
+                                         "test_doc",)
 
         file_structure = file_operations.read_file_structure()
-        assert isinstance(file_structure, FolderType)
+        assert isinstance(file_structure, FolderType) and file_structure.name == "example"
         assert len(file_structure.files) == 0 and len(file_structure.folders) == 1
-        assert len(file_structure.folders["src"].files) == 3 and len(file_structure.folders["src"].folders) == 1
+        assert len(file_structure.folders["src"].files) == 4 and len(file_structure.folders["src"].folders) == 1
         assert sorted(list(file_structure.folders["src"].files.keys())) == sorted(["class_and_function.py",
                                                                                    "fullsupport_docstring.py",
-                                                                                   "functions.py"])
+                                                                                   "functions.py",
+                                                                                   "xyz_build.py"])
+        assert list(file_structure.folders["src"].folders.keys()) == ["subfolder"]
         cls_and_func = file_structure.folders["src"].files["class_and_function.py"]
         assert isinstance(cls_and_func.classes[0], ClassType) and len(cls_and_func.classes) == 1
         assert isinstance(cls_and_func.functions[0], FunctionType) and len(cls_and_func.functions) == 2
         assert cls_and_func.classes[0].name == "Shark" and cls_and_func.classes[0].functions[0].name == "be_awesome"
         assert cls_and_func.functions[0].name == "maxi"
     finally:
-        os.remove(f"{stibnite_path}example{separator}.stibnite-ignore")
-        shutil.rmtree(f"{stibnite_path}tests{separator}test-doc")
+        os.remove(os.path.join(stibnite_path, "example", ".stibnite-ignore"))
+        shutil.rmtree(os.path.join(stibnite_path, "tests", "test-doc"))
 
 
 def test_write_file_structure():
@@ -42,33 +43,48 @@ def test_write_file_structure():
     from stibnite.file_operations import FileOperations
     from stibnite.docstring_styler import DocstringStyler
     stibnite_path = utils.get_project_path()
-    separator = constants.SEPARATOR_DICT[platform.system()]
     try:
-        with open(f"{stibnite_path}example{separator}.stibnite-ignore", "w") as f:
-            f.write("__init__.py\n__pycache__/")
-        os.mkdir(f"{stibnite_path}tests{separator}test-doc")
-        file_operations = FileOperations(f"{stibnite_path}example",
-                                         f"{stibnite_path}tests{separator}test-doc",
-                                         "test_doc",
-                                         platform.system())
+        with open(os.path.join(stibnite_path, "example", ".stibnite-ignore"), "w") as f:
+            f.write("__init__.py\n__pycache__/\nsrc/subfolder2/subfolder3/\nbuild/")
+
+        os.mkdir(os.path.join(stibnite_path, "tests", "test-doc"))
+
+        file_operations = FileOperations(os.path.join(stibnite_path, "example"),
+                                         os.path.join(stibnite_path, "tests", "test-doc"),
+                                         "test_doc")
 
         file_structure = file_operations.read_file_structure()
 
         styled_file_structure = DocstringStyler(constants.MARKDOWN,
-                                                constants.RESTRUCTERED).get_styled_structure(file_structure)
+                                                constants.MARKDOWN).get_styled_structure(file_structure)
 
         file_operations.write_file_structure(styled_file_structure)
-        assert os.path.exists(f"{stibnite_path}tests{separator}test-doc")
-        assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}mkdocs.yml")
-        assert os.path.exists(f"{stibnite_path}tests{separator}test-doc{separator}docs{separator}index.md")
 
-        os.chdir(f"{stibnite_path}tests{separator}test-doc")
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "mkdocs.yml"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "index.md"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src", "subfolder"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src",
+                                           "xyz_build.md"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src",
+                                           "class_and_function.md"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src",
+                                           "fullsupport_docstring.md"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src",
+                                           "functions.md"))
+        assert os.path.exists(os.path.join(stibnite_path, "tests", "test-doc", "docs", "example", "src", "subfolder",
+                                           "functions.md"))
+
+        os.chdir(os.path.join(stibnite_path, "tests", "test-doc"))
         call(["mkdocs", "build", "--clean"])
 
     finally:
-        os.remove(f"{stibnite_path}example{separator}.stibnite-ignore")
-        os.chdir(f"{stibnite_path}tests")
-        shutil.rmtree(f"{stibnite_path}tests{separator}test-doc")
+        os.remove(os.path.join(stibnite_path, "example", ".stibnite-ignore"))
+        os.chdir(os.path.join(stibnite_path, "tests"))
+        shutil.rmtree(os.path.join(stibnite_path, "tests", "test-doc"))
 
 
 if __name__ == '__main__':

@@ -18,7 +18,6 @@ def mini(x, y):
     return np.min(x, y)
 
 
-
 def mini2peutetre(x, y):
     """
     Take the max between two numbers
