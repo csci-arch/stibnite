@@ -29,7 +29,7 @@
 
 ------
 <p align="center">
-    Stibnite is an automated documentation generator that can work with different docstring styles and programming languages (hopefully in the future).
+    Stibnite is an automated documentation generator that can work with different docstring styles. (and hopefully in the future different programming languages)
     <br />
     <br />
     <a href="https://github.com/csci-arch/stibnite/issues/new?assignees=&labels=bug&template=bug_report.md&title=">Report Bug</a>
@@ -39,23 +39,17 @@
 
 ## Table of Contents
 
-* [Installation](#installation)
 * [About The Project](#about-the-project)
+  * [Features](#features)
+* [Installation](#installation)
 * [Usage](#usage)
 * [License](#license)
 * [Contact](#contact)
 * [Disclaimer](#disclaimer)
 
-### Installation
-
-The easiest way to install this tool is via pip
-```
-pip install stibnite
-```
-
 ### About The Project
 
-Stibnite is a powerful tool that can create a website for the documentation of your codebase by parsing python files(for now), extracting docstrings from functions, classes, methods and, etc. and creating a stylized markdown based webpage using [mkdocs](https://www.mkdocs.org/).
+Stibnite is a powerful tool that can create a website for the documentation of your codebase by parsing python files (for now), extracting docstrings from functions, classes, methods and, etc. and creating a stylized markdown based webpage using [mkdocs](https://www.mkdocs.org/).
 
 #### Features
 
@@ -66,9 +60,20 @@ It can
 * customize the output based on your choices
 * ignore the files that you don't want them to be in the documentation
 
+### Installation
+
+The easiest way to install this tool is via pip
+```
+pip install stibnite
+```
+
 ### Usage
 
+ **Still in development process**
+
 ### License
+
+Distributed under the [```Apache 2.0```](https://www.apache.org/licenses/LICENSE-2.0) License. See [```LICENSE```](/LICENSE) for more information.
 
 ### Contact
 
