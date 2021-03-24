@@ -41,8 +41,11 @@
 
 * [About The Project](#about-the-project)
   * [Features](#features)
+    * [Supported Languages](#supported-languages)
+    * [Supported Docstring Styles](#supported-docstring-styles)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Roadmap](#roadmap)  
 * [License](#license)
 * [Contact](#contact)
 * [Disclaimer](#disclaimer)
@@ -55,10 +58,19 @@ Stibnite is a powerful tool that can create a website for the documentation of y
 
 It can
 * parse python files to extract docstrings
-* parse reStructuredText and Markdown to create a webpage
+* parse docstrings to create a webpage
 * create a website out of your codebase
 * customize the output based on your choices
 * ignore the files that you don't want them to be in the documentation
+
+##### Supported Languages
+
+> * Python
+
+##### Supported Docstring Styles
+
+> * reStructured Text
+> * Markdown
 
 ### Installation
 
@@ -70,6 +82,12 @@ pip install stibnite
 ### Usage
 
  **Still in development process**
+
+### Roadmap
+
+Our vision for this project is to create a tool that can automatically create a customizable documentation in every possible language with every possible docstring style to free the software developers from the burden of writing dreaded documentation.
+
+You can reach what we are planning for our next version in [here](https://github.com/csci-arch/stibnite/milestones)
 
 ### License
 
