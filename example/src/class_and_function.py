@@ -75,7 +75,6 @@ class Shark:
             print("lololo")
         return
 
-
     def be_awesome(self):
         """
         Take the max between two numbers

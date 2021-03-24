@@ -131,10 +131,5 @@ dmypy.json
 # pycharm
 .idea/
 
-# custom
-stibnite/dev.py
-
-example/
-
 # vscode
 .vscode/

@@ -1,7 +1,6 @@
 from stibnite import DocumentationManager, constants
 from subprocess import call
 import webbrowser
-import platform
 import sys
 import os
 
@@ -11,7 +10,7 @@ def main(argv=None):
 
     print(argv)
 
-    DocumentationManager(argv[1], argv[2], platform.system(),
+    DocumentationManager(argv[1], argv[2],
                          input_style=constants.RESTRUCTERED,
                          output_style=constants.MARKDOWN).write_file_structure()
 
